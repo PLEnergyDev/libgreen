@@ -1,6 +1,8 @@
 [package]
 name = "green"
+authors = ["Dragoș Ionescu <mail@ionescudragos.com>"]
 edition = "2024"
+readme = "README.md"
 
 [lib]
 name = "green"

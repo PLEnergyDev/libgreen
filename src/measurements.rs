@@ -4,29 +4,31 @@ use crate::bundles::{
 use std::collections::HashMap;
 use std::ffi::{CStr, c_char};
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 pub struct MeasurementContext {
     bundles: Vec<Box<dyn Bundle>>,
     output_path: PathBuf,
 }
 
-fn column_order() -> Vec<&'static str> {
-    [
-        TimeBundle::COLUMNS,
-        RaplBundle::COLUMNS,
-        CyclesBundle::COLUMNS,
-        MissesBundle::COLUMNS,
-        CStateBundle::COLUMNS,
-        &["ended"],
-    ]
-    .concat()
+fn column_order() -> &'static [&'static str] {
+    static COLUMNS: OnceLock<Vec<&'static str>> = OnceLock::new();
+    COLUMNS.get_or_init(|| {
+        [
+            TimeBundle::COLUMNS,
+            RaplBundle::COLUMNS,
+            CyclesBundle::COLUMNS,
+            MissesBundle::COLUMNS,
+            CStateBundle::COLUMNS,
+            &["ended"],
+        ]
+        .concat()
+    })
 }
 
 fn parse_config(metrics: *const c_char) -> BundleConfig {
     let s = unsafe { CStr::from_ptr(metrics) }.to_str().unwrap_or("");
-
     let flags: Vec<&str> = s.split(',').map(str::trim).collect();
-
     BundleConfig {
         rapl: flags.contains(&"rapl"),
         misses: flags.contains(&"misses"),
@@ -58,7 +60,9 @@ pub fn measure_start(metrics: *const c_char) -> *mut MeasurementContext {
         }
     }
 
-    let output_path = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let output_path = std::env::var_os("LG_OUTPUT")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("measurements.csv"));
 
     Box::into_raw(Box::new(MeasurementContext {
         bundles,
@@ -102,20 +106,19 @@ fn write_to_csv(
     data: &HashMap<String, String>,
     output_path: &PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let csv_path = output_path.join("measurements.csv");
-    let file_exists = csv_path.exists();
+    let file_exists = output_path.exists();
     let file = std::fs::OpenOptions::new()
-        .write(true)
         .create(true)
         .append(true)
-        .open(&csv_path)?;
+        .open(output_path)?;
 
     let mut wtr = csv::WriterBuilder::new()
-        .has_headers(!file_exists)
+        .has_headers(false)
         .from_writer(file);
 
     let headers: Vec<&str> = column_order()
-        .into_iter()
+        .iter()
+        .copied()
         .filter(|&k| data.contains_key(k))
         .collect();
 
