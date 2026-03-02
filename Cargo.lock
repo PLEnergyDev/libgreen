@@ -142,6 +142,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
 
 [[package]]
+name = "green"
+version = "0.0.0"
+dependencies = [
+ "affinity",
+ "chrono",
+ "csv",
+ "jni",
+ "libc",
+ "num_cpus",
+ "perf-event-data",
+ "perf-event2",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -214,20 +228,6 @@ name = "libc"
 version = "0.2.182"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6800badb6cb2082ffd7b6a67e6125bb39f18782f793520caee8cb8846be06112"
-
-[[package]]
-name = "libgreen"
-version = "0.0.0"
-dependencies = [
- "affinity",
- "chrono",
- "csv",
- "jni",
- "libc",
- "num_cpus",
- "perf-event-data",
- "perf-event2",
-]
 
 [[package]]
 name = "log"
