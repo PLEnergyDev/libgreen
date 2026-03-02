@@ -13,7 +13,6 @@ release:
 	sudo install -m755 $(S_A) $(LIB_DIR)
 	sudo install -m644 $(S_HEADER) $(INCLUDE_DIR)
 	sudo install -m644 $(S_JAVA) $(INCLUDE_DIR)
-	sudo sysctl -w kernel.perf_event_paranoid=0
 
 uninstall:
 	sudo rm -f $(LIB_DIR)/libgreen.so

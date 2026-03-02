@@ -1,9 +1,11 @@
+use crate::bundles::{
+    Bundle, BundleConfig, CStateBundle, CyclesBundle, MissesBundle, RaplBundle, TimeBundle,
+};
 use std::collections::HashMap;
-use std::ffi::{c_char, CStr};
+use std::ffi::{CStr, c_char};
 use std::path::PathBuf;
-use crate::bundles::{Bundle, BundleConfig, TimeBundle, RaplBundle, CyclesBundle, MissesBundle, CStateBundle};
 
-pub struct MeasurementState {
+pub struct MeasurementContext {
     bundles: Vec<Box<dyn Bundle>>,
     output_path: PathBuf,
 }
@@ -20,28 +22,25 @@ fn column_order() -> Vec<&'static str> {
     .concat()
 }
 
-fn parse_config(events: *const c_char) -> BundleConfig {
-    let s = unsafe { CStr::from_ptr(events) }
-        .to_str()
-        .unwrap_or("");
+fn parse_config(metrics: *const c_char) -> BundleConfig {
+    let s = unsafe { CStr::from_ptr(metrics) }.to_str().unwrap_or("");
 
     let flags: Vec<&str> = s.split(',').map(str::trim).collect();
 
     BundleConfig {
-        rapl:    flags.contains(&"rapl"),
-        misses:  flags.contains(&"misses"),
+        rapl: flags.contains(&"rapl"),
+        misses: flags.contains(&"misses"),
         cstates: flags.contains(&"cstates"),
-        cycles:  flags.contains(&"cycles"),
+        cycles: flags.contains(&"cycles"),
     }
 }
 
 fn resolve_cpus() -> Vec<usize> {
-    affinity::get_thread_affinity()
-        .unwrap_or_else(|_| (0..num_cpus::get()).collect())
+    affinity::get_thread_affinity().unwrap_or_else(|_| (0..num_cpus::get()).collect())
 }
 
-pub fn measure_start(events: *const c_char) -> *mut MeasurementState {
-    let config = parse_config(events);
+pub fn measure_start(metrics: *const c_char) -> *mut MeasurementContext {
+    let config = parse_config(metrics);
     let cpus = resolve_cpus();
 
     let mut bundles = match config.create_bundles(&cpus) {
@@ -61,12 +60,15 @@ pub fn measure_start(events: *const c_char) -> *mut MeasurementState {
 
     let output_path = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
 
-    Box::into_raw(Box::new(MeasurementState { bundles, output_path }))
+    Box::into_raw(Box::new(MeasurementContext {
+        bundles,
+        output_path,
+    }))
 }
 
-pub fn measure_stop(state: *mut MeasurementState) {
+pub fn measure_stop(state: *mut MeasurementContext) {
     if state.is_null() {
-        eprintln!("libgreen: measure_stop called with null handle");
+        eprintln!("libgreen: measure_stop called with null context");
         return;
     }
 
@@ -125,4 +127,3 @@ fn write_to_csv(
     wtr.flush()?;
     Ok(())
 }
-
