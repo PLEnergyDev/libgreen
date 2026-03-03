@@ -7,10 +7,10 @@
 extern "C" {
 #endif
 
-typedef void* MeasurementHandle;
+typedef void* MeasurementContext;
 
-MeasurementHandle measure_start(const char* events);
-void              measure_stop(MeasurementHandle handle);
+MeasurementContext measure_start(const char* events);
+void measure_stop(MeasurementContext context);
 
 #ifdef __cplusplus
 }

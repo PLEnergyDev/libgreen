@@ -4,6 +4,6 @@ public class Green {
     }
 
     public native long measureStart(String events);
-    public native void measureStop(long handle);
+    public native void measureStop(long context);
 }
 
