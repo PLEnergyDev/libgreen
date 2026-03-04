@@ -2,7 +2,7 @@ use crate::bundles::{
     Bundle, BundleConfig, CStateBundle, CyclesBundle, MissesBundle, RaplBundle, TimeBundle,
 };
 use std::collections::HashMap;
-use std::ffi::{CStr, c_char};
+use std::ffi::{c_char, CStr};
 use std::path::PathBuf;
 use std::sync::OnceLock;
 

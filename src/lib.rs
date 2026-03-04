@@ -17,9 +17,9 @@ pub extern "C" fn measure_stop(context: *mut MeasurementContext) {
 #[cfg(all(target_os = "linux", any(target_arch = "x86", target_arch = "x86_64")))]
 pub mod jni {
     use crate::measurements::MeasurementContext;
-    use jni::JNIEnv;
     use jni::objects::{JClass, JString};
     use jni::sys::jlong;
+    use jni::JNIEnv;
 
     #[unsafe(no_mangle)]
     pub extern "system" fn Java_Green_measureStart(
@@ -37,3 +37,4 @@ pub mod jni {
         crate::measurements::measure_stop(context as *mut MeasurementContext);
     }
 }
+
